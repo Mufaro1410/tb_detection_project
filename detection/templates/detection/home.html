@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TB Detection</title>
+</head>
+<body>
+    <h2>Welcome</h2>
+    <h3>Login to continue</h3>
+    <div>
+        {% for image in images %}
+            <div>
+                <h2>Image ID: {{ image.id }}</h2>
+                <img src="{{ image.image.url }}" alt="Image">
+                <p>Result: {{ image.result }}</p>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
