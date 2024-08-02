@@ -1,15 +1,16 @@
 # detection/views.py
 
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+
+import numpy as np
+# from tensorflow.keras.models import load_model
+from PIL import Image
+
 from .models import Patient, TestResult
 from .forms import PatientForm, TestResultForm
-# from django.http import HttpResponse
-# from tensorflow.keras.models import load_model
-# from tensorflow.keras.preprocessing import image
-# import numpy as np
-# from PIL import Image as PILImage
-# import os
-from PIL import Image
 
 # model = load_model('path_to_your_model.h5')  # Update with your model path
 
@@ -22,34 +23,29 @@ def predict_tb(image_path):
     return prediction
 
 
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('/')
+        else:
+            messages.error(request, 'Invalid username or password')
+    return render(request, 'detection/login.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+@login_required
 def home(request):
     # images = Image.objects.all()
     return render(request, 'detection/home.html',)
     # return render(request, 'detection/home.html', {'images': images})
 
-# def upload_image(request):
-#     if request.method == 'POST':
-#         form = ImageForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             new_image = form.save()
-#             result = detect_tb(new_image.image.path)
-#             new_image.result = result
-#             new_image.save()
-#             return redirect('home')
-#     else:
-#         form = ImageForm()
-#     return render(request, 'detection/upload.html', {'form': form})
-
-# def detect_tb(image_path):
-#     img = PILImage.open(image_path).resize((224, 224))
-#     img_array = image.img_to_array(img) / 255.0
-#     img_array = np.expand_dims(img_array, axis=0)
-#     prediction = model.predict(img_array)
-#     if prediction[0][0] > 0.5:
-#         return 'TB Detected'
-#     else:
-#         return 'No TB Detected'
-
+@login_required
 def add_patient(request):
     if request.method == "POST":
         form = PatientForm(request.POST)
@@ -60,10 +56,12 @@ def add_patient(request):
         form = PatientForm()
     return render(request, 'detection/add_patient.html', {'form': form})
 
+@login_required
 def patient_list(request):
     patients = Patient.objects.all()
     return render(request, 'detection/patient_list.html', {'patients': patients})
 
+@login_required
 def add_test_result(request, patient_id):
     patient = get_object_or_404(Patient, pk=patient_id)
     if request.method == "POST":
